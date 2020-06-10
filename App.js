@@ -11,6 +11,7 @@ import Video from 'react-native-video';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import IconFeather from 'react-native-vector-icons/Feather';
 import { Slider } from 'react-native-elements';
+import keys from './awskeys';
 
 import AWS from 'aws-sdk/dist/aws-sdk-react-native';
 import {
@@ -31,6 +32,7 @@ import {
   DebugInstructions,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
+import awskeys from './awskeys';
 
 const App: () => React$Node = () => {
 
@@ -43,8 +45,9 @@ const App: () => React$Node = () => {
 
   var sqs = new AWS.SQS(
     {apiVersion: '2012-11-05',
-    accessKeyId:'AKIARP37NQ3K7ES4VH77',
-    secretAccessKey: '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'});
+    accessKeyId:keys.accessKeyId,
+    secretAccessKey: keys.secretAccessKey
+    });
 
 
 
@@ -131,7 +134,7 @@ const App: () => React$Node = () => {
 const styles = StyleSheet.create({
   container:{ flex: 1, justifyContent: "center"},
   recordContainer: {
-    backgroundColor: Colors.lighter,
+    backgroundColor: Colors.dark,
     flex:1,
     flexDirection: 'row',
     marginTop: 80,

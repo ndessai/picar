@@ -1,0 +1,15 @@
+{
+    "prod": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-picar-prod-112255-authRole",
+            "UnauthRoleArn": "arn:aws:iam::102809568981:role/amplify-picar-prod-112255-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::102809568981:role/amplify-picar-prod-112255-authRole",
+            "Region": "us-east-2",
+            "DeploymentBucketName": "amplify-picar-prod-112255-deployment",
+            "UnauthRoleName": "amplify-picar-prod-112255-unauthRole",
+            "StackName": "amplify-picar-prod-112255",
+            "StackId": "arn:aws:cloudformation:us-east-2:102809568981:stack/amplify-picar-prod-112255/43c83120-ab2e-11ea-a80f-060a55e3d44e",
+            "AmplifyAppId": "dlljgspv9lgww"
+        }
+    }
+}

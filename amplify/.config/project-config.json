@@ -1,0 +1,17 @@
+{
+    "projectName": "picar",
+    "version": "3.0",
+    "frontend": "javascript",
+    "javascript": {
+        "framework": "react-native",
+        "config": {
+            "SourceDir": "/",
+            "DistributionDir": "/",
+            "BuildCommand": "npx react-native run-ios",
+            "StartCommand": "npx react-native run-ios"
+        }
+    },
+    "providers": [
+        "awscloudformation"
+    ]
+}
