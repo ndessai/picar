@@ -6,15 +6,18 @@
  * @flow strict-local
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import Video from 'react-native-video';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import IconFeather from 'react-native-vector-icons/Feather';
 import { Slider } from 'react-native-elements';
 import keys from './awskeys';
 
+import GoogleCast, { CastButton } from 'react-native-google-cast'
+
 import AWS from 'aws-sdk/dist/aws-sdk-react-native';
 import {
+  Image,
   SafeAreaView,
   StyleSheet,
   ScrollView,
@@ -36,11 +39,90 @@ import awskeys from './awskeys';
 
 const App: () => React$Node = () => {
 
+  const defaultImage = require('./assets/start300x225.jpg');
+  const [workoutCount, setworkoutCount] = useState(0);
+  const [photoUrls, setphotoUrls] = useState([]);
+  const [currentImage, setcurrentImage] = useState(defaultImage);
+
+  // Establishing connection to Chromecast
+GoogleCast.EventEmitter.addListener(GoogleCast.SESSION_STARTING, () => {
+  console.log("session starting");
+})
+
+// Connection established
+GoogleCast.EventEmitter.addListener(GoogleCast.SESSION_STARTED, () => {
+  /* callback */
+  console.log("started");
+})
+
+// Connection failed
+GoogleCast.EventEmitter.addListener(GoogleCast.SESSION_START_FAILED, error => {
+  console.log(error)
+})
+
+// Connection suspended (your application went to background or disconnected)
+GoogleCast.EventEmitter.addListener(GoogleCast.SESSION_SUSPENDED, () => {
+  /* callback */
+  console.log("suspended");
+})
+
+// Attempting to reconnect
+GoogleCast.EventEmitter.addListener(GoogleCast.SESSION_RESUMING, () => {
+  /* callback */
+})
+
+// Reconnected
+GoogleCast.EventEmitter.addListener(GoogleCast.SESSION_RESUMED, () => {
+  /* callback */
+})
+
+// Disconnecting
+GoogleCast.EventEmitter.addListener(GoogleCast.SESSION_ENDING, () => {
+  /* callback */
+  console.log("ended");
+})
+
+// Disconnected (error provides explanation if ended forcefully)
+GoogleCast.EventEmitter.addListener(GoogleCast.SESSION_ENDED, error => {
+  /* callback */
+  console.log("ended" + error);
+})
+
+  // Play the casting, only if the device is connected and was playing something before in the actual sesion
+  playCast = () => GoogleCast.play();
+
+  // Pause the currently casting
+  pauseCast = () => GoogleCast.pause();
+
+  // Show the Expanded Control Panel
+  shwoControls = () => GoogleCast.launchExpandedControls();
+
   // Set the region 
-  
+  startCast = () => {
+  GoogleCast.castMedia({
+    mediaUrl:
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/mp4/BigBuckBunny.mp4',
+    imageUrl:
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/images/480x270/BigBuckBunny.jpg',
+    title: 'Big Buck Bunny',
+    subtitle:
+      'A large and lovable rabbit deals with three tiny bullies, led by a flying squirrel, who are determined to squelch his happiness.',
+    studio: 'Blender Foundation',
+    streamDuration: 596, // seconds
+    contentType: 'video/mp4', // Optional, default is "video/mp4"
+    playPosition: 10, // seconds
+    customData: {
+      // Optional, your custom object that will be passed to as customData to reciever
+      customKey: 'customValue',
+    },
+  }).then(console.log('Playing.. '))
+  .catch(e => console.log('An error has ocurred, reason: ', e));
+};
 
   recordClick = () =>  {
    
+    
+
     AWS.config.update({region: 'us-east-2'});
 
   var sqs = new AWS.SQS(
@@ -48,6 +130,53 @@ const App: () => React$Node = () => {
     accessKeyId:keys.accessKeyId,
     secretAccessKey: keys.secretAccessKey
     });
+
+    var bucketName = 'picar-workoutimages';
+    // Create a new service object
+var s3 = new AWS.S3({
+  params: {Bucket: bucketName},
+  accessKeyId:keys.accessKeyId,
+  secretAccessKey: keys.secretAccessKey
+});
+
+s3.listObjects({Delimiter: '/'}, function(err, data) {
+  if (err) {
+    setworkoutCount(-1);
+  } else {
+    setworkoutCount(-2);
+    var albumName
+    var albums = data.CommonPrefixes.map(function(commonPrefix) {
+      var prefix = commonPrefix.Prefix;
+      albumName = decodeURIComponent(prefix.replace('/', ''));
+    });
+    setworkoutCount(albums.length);
+
+    var albumPhotosKey = encodeURIComponent(albumName) + '/';
+  s3.listObjects({Prefix: albumPhotosKey}, function(err, data) {
+    if (err) {
+      return alert('There was an error viewing your album: ' + err.message);
+    }
+    // 'this' references the AWS.Response instance that represents the response
+    var href = this.request.httpRequest.endpoint.href;
+    var bucketUrl = href + bucketName + '/';
+    var photos = [];
+    data.Contents.map(function(photo) {
+      var photoKey = photo.Key;
+      var url = bucketUrl + encodeURIComponent(photoKey);
+      photos.push(url);
+      console.log(url);
+      setcurrentImage({uri: url})
+      console.log("current url =>" + url);
+    });
+
+    setphotoUrls(photoUrls.concat(photos));
+    console.log(photoUrls);
+
+    setworkoutCount(photos.length);
+  });
+
+}
+  });
 
 
 
@@ -74,14 +203,15 @@ const App: () => React$Node = () => {
       
     };
     sqs.sendMessage(params, function(err, data) {
-      if (err) alert(err, "Error"+ err.stack); // an error occurred
-      else     alert(data);           // successful response
+     // if (err) alert(err, "Error"+ err.stack); // an error occurred
+     // else     alert(data);           // successful response
     });
   }
 
   return (
     <>
       <View style={styles.container}>
+        
         <View style={styles.recordContainer}>
         <TouchableOpacity onPress={this.recordClick}>
           <View style={styles.button}>
@@ -90,7 +220,8 @@ const App: () => React$Node = () => {
             </Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={this.recordClick}>
+        <CastButton style={{ width: 24, height: 24 }} />
+        <TouchableOpacity onPress={this.startCast}>
           <View style={styles.button}>
             <Text >
             <IconFeather name="cast" size={30} color="#900" />
@@ -99,20 +230,25 @@ const App: () => React$Node = () => {
         </TouchableOpacity>
         </View>
         <View style={styles.imageContainer}>
+        <Image source={currentImage}
+                  style={{width: 400, height: 400}} />
           <View style={{flex: 1, justifyContent: "center"}}>
-          <Video source={{uri: "http://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4"}}   // Can be a URL or a localfile.
-       ref={(ref) => {
-         this.player = ref
-       }}                                      // Store reference
-       onBuffer={this.onBuffer}                // Callback when remote video is buffering
-       onEnd={this.onEnd}                      // Callback when playback finishes
-       onError={this.videoError}               // Callback when video cannot be loaded
-       style={styles.backgroundVideo} />
+          
+         
 </View>
 <View style={{ flex: 1, margin: 30, alignItems: 'stretch', justifyContent: 'center', width: 300 }}>
   <Slider
-    value={100}
+    value={0}
+    maximumValue={photoUrls.Length}
+    step = {0.1}
+    onValueChange={val => 
+      {
+        index = Math.round(val * 10);
+        console.log("new url =>" + index + "  "+ photoUrls[index]);
+        setcurrentImage({uri: photoUrls[index]});
+      }}
   />
+  <Text>{currentImage.uri}</Text>
 </View>
 
           </View>
@@ -122,6 +258,7 @@ const App: () => React$Node = () => {
           <View style={styles.button}>
             <Icon name="compass" size={30} color="#900" />
           </View>
+         
         </TouchableOpacity>
         
       </View>
