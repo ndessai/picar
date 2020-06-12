@@ -101,7 +101,7 @@ GoogleCast.EventEmitter.addListener(GoogleCast.SESSION_ENDED, error => {
   startCast = () => {
   GoogleCast.castMedia({
     mediaUrl:
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/mp4/BigBuckBunny.mp4',
+      'http://192.168.1.100:8000/stream.mjpg',
     imageUrl:
       'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/images/480x270/BigBuckBunny.jpg',
     title: 'Big Buck Bunny',
@@ -109,7 +109,7 @@ GoogleCast.EventEmitter.addListener(GoogleCast.SESSION_ENDED, error => {
       'A large and lovable rabbit deals with three tiny bullies, led by a flying squirrel, who are determined to squelch his happiness.',
     studio: 'Blender Foundation',
     streamDuration: 596, // seconds
-    contentType: 'video/mp4', // Optional, default is "video/mp4"
+    contentType: 'image/jpeg', // Optional, default is "video/mp4"
     playPosition: 10, // seconds
     customData: {
       // Optional, your custom object that will be passed to as customData to reciever
